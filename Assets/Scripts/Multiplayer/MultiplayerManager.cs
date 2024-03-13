@@ -10,6 +10,7 @@ namespace Multiplayer
         [SerializeField] private EnemyController _enemy;
 
         private ColyseusRoom<State> _room;
+        private Dictionary<string, EnemyController> _enemies = new Dictionary<string, EnemyController>();
 
         protected override void Start()
         {
@@ -28,6 +29,13 @@ namespace Multiplayer
         {
             _room.Send(key, data);
         }
+        
+        public void SendMessage(string key, string data)
+        {
+            _room.Send(key, data);
+        }
+
+        public string GetSessionId() => _room.SessionId;
 
         private async void Connect()
         {
@@ -39,6 +47,22 @@ namespace Multiplayer
             _room = await Instance.client.JoinOrCreate<State>("state_handler", data);
 
             _room.OnStateChange += OnStateChange;
+            
+            _room.OnMessage<string>("Shoot", ApplyShoot);
+        }
+
+        private void ApplyShoot(string jsonShootInfo)
+        {
+            ShootInfo shootInfo = JsonUtility.FromJson<ShootInfo>(jsonShootInfo);
+
+            if (_enemies.TryGetValue(shootInfo.Key, out EnemyController enemy))
+            {
+                enemy.Shoot(shootInfo);
+            }
+            else
+            {
+                Debug.LogError("Противника нет, а он пытался стрелять");
+            }
         }
 
         private void OnStateChange(State state, bool isFirstState)
@@ -68,11 +92,17 @@ namespace Multiplayer
             
             EnemyController enemy = Instantiate(_enemy, position, Quaternion.identity);
             enemy.Init(player);
+            
+            _enemies.Add(key, enemy);
         }
 
         private void RemoveEnemy(string key, Player player)
         {
-            
+            if(_enemies.TryGetValue(key, out EnemyController enemy))
+            {
+                enemy.Destroy();
+                _enemies.Remove(key);
+            }
         }
     }
 }
