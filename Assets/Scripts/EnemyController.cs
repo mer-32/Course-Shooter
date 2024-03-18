@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using Colyseus.Schema;
+using Multiplayer;
 using UnityEngine;
 
 public class EnemyController : MonoBehaviour
@@ -26,10 +27,14 @@ public class EnemyController : MonoBehaviour
         }
     }
 
-    public void Init(Player player)
+    public void Init(string key, Player player)
     {
+        _character.Init(key);
+        
         _player = player;
         _character.SetSpeed(player.speed);
+        _character.SetMaxHP(player.maxHP);
+        
         player.OnChange += OnChange;
     }
 
@@ -59,6 +64,13 @@ public class EnemyController : MonoBehaviour
         {
             switch (dataChange.Field)
             {
+                case "loss":
+                    MultiplayerManager.Instance.LossCounter.SetEnemyLoss((byte)dataChange.Value);
+                    break;
+                case "currentHP":
+                    if((sbyte)dataChange.Value > (sbyte)dataChange.PreviousValue)
+                        _character.RestoreHP((sbyte)dataChange.Value);
+                    break;
                 case "pX":
                     position.x = (float) dataChange.Value;
                     break;

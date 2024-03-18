@@ -6,11 +6,15 @@ namespace Multiplayer
 {
     public class MultiplayerManager : ColyseusManager<MultiplayerManager>
     {
+
+        [SerializeField] private LossCounter _lossCounter;
         [SerializeField] private PlayerCharacter _player;
         [SerializeField] private EnemyController _enemy;
 
         private ColyseusRoom<State> _room;
         private Dictionary<string, EnemyController> _enemies = new Dictionary<string, EnemyController>();
+
+        public LossCounter LossCounter => _lossCounter;
 
         protected override void Start()
         {
@@ -41,7 +45,8 @@ namespace Multiplayer
         {
             Dictionary<string, object> data = new Dictionary<string, object>()
             {
-                {"speed", _player.Speed}
+                {"speed", _player.Speed},
+                {"hp", _player.MaxHealth}
             };
 
             _room = await Instance.client.JoinOrCreate<State>("state_handler", data);
@@ -83,7 +88,13 @@ namespace Multiplayer
         {
             Vector3 position = new Vector3(player.pX, player.pY, player.pZ);
 
-            Instantiate(_player, position, Quaternion.identity);
+           PlayerCharacter character = Instantiate(_player, position, Quaternion.identity);
+           player.OnChange += character.OnChange;
+
+           Controller controller = character.GetComponent<Controller>();
+           
+           _room.OnMessage<string>("Restart",  controller.Restart);
+
         }
 
         private void CreateEnemy(string key, Player player)
@@ -91,7 +102,7 @@ namespace Multiplayer
             Vector3 position = new Vector3(player.pX, player.pY, player.pZ);
             
             EnemyController enemy = Instantiate(_enemy, position, Quaternion.identity);
-            enemy.Init(player);
+            enemy.Init(key, player);
             
             _enemies.Add(key, enemy);
         }

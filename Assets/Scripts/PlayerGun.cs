@@ -3,6 +3,7 @@ using System;
 
 public class PlayerGun: Gun
 {
+    [SerializeField] private int _damage;
     [SerializeField] private Transform _bulletPoint;
     [SerializeField] private float _bulletSpeed;
     [SerializeField] private float _shootDelay;
@@ -21,7 +22,7 @@ public class PlayerGun: Gun
         _lastShootDelay = Time.time;
 
         Bullet bullet = Instantiate(_bulletPrefab, position, _bulletPoint.rotation);
-        bullet.Init(velocity);
+        bullet.Init(velocity, _damage);
         
         Shooted?.Invoke();
 
