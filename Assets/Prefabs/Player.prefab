@@ -370,6 +370,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4f4e47c57a2a4d5d891a382d3580192d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _restartDelay: 3
   _player: {fileID: 8113521237429167600}
   _gun: {fileID: 2318477704339776754}
   _mouseSensetivity: 2
@@ -385,7 +386,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c63b5bc2f34568c418a75158e360bbeb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _speed: 2
+  _speed: 6
   _maxHealth: 10
   _health: {fileID: 4312722511640248645}
   _rigidbody: {fileID: 403447047016698247}
