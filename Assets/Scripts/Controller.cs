@@ -13,23 +13,41 @@ public class Controller : MonoBehaviour
 
     private MultiplayerManager _multiplayerManager;
     private bool _hold = false;
+    private bool _hideCursor;
 
     private void Start()
     {
         _multiplayerManager = MultiplayerManager.Instance;
+        _hideCursor = true;
+
+        Cursor.lockState = CursorLockMode.Locked;
     }
 
     private void Update()
     {
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            _hideCursor = !_hideCursor;
+
+            Cursor.lockState = _hideCursor ? CursorLockMode.Locked : CursorLockMode.None;
+        }
+        
         if(_hold) return;
         
         float inputH = Input.GetAxisRaw("Horizontal");
         float inputV = Input.GetAxisRaw("Vertical");
 
-        float mouseX = Input.GetAxis("Mouse X");
-        float mouseY = Input.GetAxis("Mouse Y");
+        float mouseX = 0;
+        float mouseY = 0;
+        bool isShoot = false;
+        
+        if (_hideCursor)
+        {
+            mouseX = Input.GetAxis("Mouse X");
+            mouseY = Input.GetAxis("Mouse Y");
 
-        bool isShoot = Input.GetMouseButton(0);
+            isShoot = Input.GetMouseButton(0); 
+        }
 
         bool space = Input.GetKeyDown(KeyCode.Space);
 
@@ -43,24 +61,29 @@ public class Controller : MonoBehaviour
         SendMove();
     }
 
-    public void Restart(string jsonRestartInfo)
+    public void Restart(int spawnIndex)
     {
-        RestartInfo info = JsonUtility.FromJson<RestartInfo>(jsonRestartInfo);
+        _multiplayerManager.SpawnPoints.GetPoint(spawnIndex, out Vector3 position, out  Vector3 rotation);
+        
         StartCoroutine(HoldRoutine());
 
-        _player.transform.position = new Vector3(info.X, 0, info.Z);
+        _player.transform.position = position;
+
+        rotation.x = 0;
+        rotation.z = 0;
+        _player.transform.eulerAngles = rotation;
         _player.SetInput(0,0,0);
         
         Dictionary<string, object> data = new Dictionary<string, object>()
         {
-            {"pX", info.X},
-            {"pY", 0},
-            {"pZ", info.Z},
+            {"pX", position.x},
+            {"pY", position.y},
+            {"pZ", position.z},
             {"vX", 0},
             {"vY", 0},
             {"vZ", 0},
             {"rX", 0},
-            {"rY", 0},
+            {"rY", rotation.y},
         };
 
         _multiplayerManager.SendMessage("move", data);
